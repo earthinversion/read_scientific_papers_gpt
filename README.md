@@ -14,6 +14,11 @@ pip install pyyaml
 ## Run
 - Export your OpenAI api in your os environment
 
+## Examples
 ```
 python read_paper.py -pp "papers/french-and-romanowicz---2014---whole-mantle-radially-anisotropic-shear-velocity-s.pdf" -q "who are the authors of the article?"
+```
+
+```
+python read_paper.py -pp "papers/french-and-romanowicz---2014---whole-mantle-radially-anisotropic-shear-velocity-s.pdf" -q "write a summary of this article"
 ```
