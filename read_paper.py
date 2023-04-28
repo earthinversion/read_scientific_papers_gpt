@@ -56,13 +56,14 @@ def main():
             if os.path.exists(outdoc):
                 os.remove(outdoc)
         with open(outdoc, 'a') as f:
-            f.write("====================\n")
+            # f.write("====================\n")
+            f.write("="*100+"\n")
             f.write("QUERY: {}\n".format(query))
             f.write("OUTPUT: {}\n".format(out))
-            f.write("--------------------\n")
-    print("====================")
+            f.write("-"*100+"\n")
+    print("="*100)
     print(out)
-    print("--------------------")
+    print("-"*100)
 
 def get_size(file_path):
     size = os.path.getsize(file_path)
