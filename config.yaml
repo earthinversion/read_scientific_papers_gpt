@@ -14,5 +14,5 @@ output_stats: False ## output statistics of the run
 ## GPT3 parameters 
 gpt_temperature: 0 ## gpt temperature parameter (0-1)
 
-## document the output?
+## If the document_output option is set to true, the output of the script will be written to a file. 
 document_output: True
