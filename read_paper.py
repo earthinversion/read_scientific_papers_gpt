@@ -46,7 +46,7 @@ def main():
     query = args.query
     out = query_document(docsearch, chain, query)
     if config['document_output']:
-        outdoc = paperFile.replace(".pdf", "_output.txt")
+        outdoc = paperFile.replace(".pdf", "_output.md")
         if config['clear_cache']:
             if os.path.exists(outdoc):
                 os.remove(outdoc)
@@ -55,8 +55,9 @@ def main():
             f.write("QUERY: {}\n".format(query))
             f.write("OUTPUT: {}\n".format(out))
             f.write("--------------------\n")
-    print("--------------------")
+    print("====================")
     print(out)
+    print("--------------------")
 
 def get_size(file_path):
     size = os.path.getsize(file_path)
