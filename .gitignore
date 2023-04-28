@@ -2,5 +2,4 @@ cachedata
 paper_ids.yaml
 papers
 *.{psd,zip,tar,gz}
-
-*.{psd,zip,tar,gz}
+.DS_Store
