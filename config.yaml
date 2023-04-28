@@ -1,0 +1,18 @@
+## This is the configuration file
+
+## path to the reading material
+paper_path: "/Users/utpalkumar/Documents/myDocuments/iCloudDocs/RichardWork/readings/evaluation-of-vibration-detection-user-smartphones-in-a-two-story-masonry-infilled-rc-frame-building.pdf"
+
+chunk_size: 2000 ## number of characters in each chunk
+chunk_overlap: 400 ## overlap between chunks in characters is important for the model to learn the context
+
+## Clean up the old run
+clear_cache: False
+
+output_stats: False ## output statistics of the run
+
+## GPT3 parameters 
+gpt_temperature: 0 ## gpt temperature parameter (0-1)
+
+## document the output?
+document_output: True
