@@ -1,5 +1,4 @@
 ## Language Model for Reading Research Papers
-https://platform.openai.com/docs/models/overview
 ## Installation
 - Create a python virtual environment and install these libraries
 ```
@@ -12,7 +11,7 @@ pip install pyyaml
 ```
 
 ## Run
-- Export your OpenAI api in your os environment
+- Export your OpenAI api in your os environment. You can go to the openai platform to get your api: https://platform.openai.com/docs/models/overview
 
 ## Examples
 
