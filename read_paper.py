@@ -1,3 +1,8 @@
+'''
+Author: Utpal Kumar, BSL, UCB
+Date: 2023-04-27
+Email: utpalkumar@berkeley.edu
+'''
 from PyPDF2 import PdfReader
 import pickle
 from langchain.embeddings.openai import OpenAIEmbeddings
