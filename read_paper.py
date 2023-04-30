@@ -7,7 +7,7 @@ from PyPDF2 import PdfReader
 import pickle
 from langchain.embeddings.openai import OpenAIEmbeddings
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.vectorstores import ElasticVectorSearch, Pinecone, Weaviate, FAISS
+from langchain.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
 from langchain.chat_models import ChatOpenAI
 import os, sys
@@ -35,7 +35,6 @@ with open(args.configfile, 'r') as f:
 openaikey = os.environ["OPENAI_API_KEY"]
 
 
-# paperFile = "papers/french-and-romanowicz---2014---whole-mantle-radially-anisotropic-shear-velocity-s.pdf"
 paperFile = config['paper_path']
 
 if not os.path.exists(paperFile):
@@ -46,8 +45,6 @@ def main():
     docsearch, chain = create_model()
 
     ## Query the document
-    # query = "who are the authors of the article?"
-    # query = "explain this article in 10 points"
     query = args.query
     out = query_document(docsearch, chain, query)
     if config['document_output']:
@@ -120,9 +117,8 @@ def create_model():
                 raw_text += text
 
 
-        # We need to split the text that we read into smaller chunks so that during information 
-        # retreival we don't hit the token size limits. 
-
+        ## Split the text into chunks of 1000 characters each with 200 characters overlap between chunks 
+        ## (so that we don't miss any information) 
         text_splitter = CharacterTextSplitter(        
             separator = "\n",
             chunk_size = config['chunk_size'],
@@ -132,15 +128,18 @@ def create_model():
         texts = text_splitter.split_text(raw_text)
 
 
-        # Download embeddings from OpenAI
+        # Download embeddings from OpenAI API and create a vector store using FAISS 
+        ## (a library for efficient similarity search and clustering of dense vectors)
         embeddings = OpenAIEmbeddings()
 
+        ## Create the vector store object using FAISS 
         docsearch = FAISS.from_texts(texts, embeddings)
 
         # Save the object to a pickle file
         with open(pdfdatafile1, 'wb') as f:
             pickle.dump(docsearch, f)
 
+        ## Print some stats
         if config['output_stats']:
             print("Number of chunks: {}".format(len(texts)))
             print("Average chunk length: {:.1f}".format(sum([len(t) for t in texts])/len(texts)))
@@ -156,6 +155,8 @@ def create_model():
         docsearch = pickle.load(f)
 
     if not os.path.exists(chaindatafile1):
+        ## Create a question answering chain using GPT-3.5-turbo model from the langchain library 
+        ## (a library for building language chains) 
         chain = load_qa_chain(ChatOpenAI(temperature=config['gpt_temperature'], model_name='gpt-3.5-turbo'), chain_type="stuff")
         with open(chaindatafile1, 'wb') as f:
             pickle.dump(chain, f)
@@ -165,6 +166,10 @@ def create_model():
     return docsearch, chain
 
 def query_document(docsearch, chain, query):
+    '''
+    Query the document and return the answer
+    '''
+    ## Query the document 
     docs = docsearch.similarity_search(query)
     return chain.run(input_documents=docs, question=query)
 
