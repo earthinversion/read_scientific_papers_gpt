@@ -4,6 +4,8 @@ This script reads a PDF file and answers questions about it. The script takes tw
 ## Installation
 - Create a python virtual environment and install these libraries
 ```
+python3 -m venv venv
+source venv/bin/activate
 pip install langchain
 pip install openai
 pip install PyPDF2
