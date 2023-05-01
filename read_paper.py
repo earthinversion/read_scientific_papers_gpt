@@ -35,18 +35,19 @@ with open(args.configfile, 'r') as f:
 openaikey = os.environ["OPENAI_API_KEY"]
 
 
-paperFile = config['paper_path']
-
-if not os.path.exists(paperFile):
-    sys.exit("Error: Paper file does not exist")
-
 ########################    MAIN    ##############################
 def main():
-    docsearch, chain = create_model()
+    paperFile = config['paper_path']
+
+    if not os.path.exists(paperFile):
+        sys.exit("Error: Paper file does not exist")
+
+    paperreader = PaperReader(config)
+    # docsearch, chain = create_model(paperFile)
 
     ## Query the document
     query = args.query
-    out = query_document(docsearch, chain, query)
+    out = paperreader.query_document(query)
     if config['document_output']:
         outdoc = paperFile.replace(".pdf", "_output.md")
         if config['clear_cache']:
@@ -63,115 +64,136 @@ def main():
     print(out)
     print("-"*100)
 
-def get_size(file_path):
-    size = os.path.getsize(file_path)
-    power = 2**10
-    n = 0
-    power_labels = {0: '', 1: 'KB', 2: 'MB', 3: 'GB', 4: 'TB'}
-    while size > power:
-        size /= power
-        n += 1
-    return f"{size:.2f} {power_labels[n]}"
+class PaperReader:
+    def __init__(self, config):
+        self.paperFile = config['paper_path']
+        self.databasedir = "cachedata"
+        self.yamldb = "paper_ids.yaml"
+        self._create_model()
 
-def create_model():
-    databasedir = "cachedata"
-    os.makedirs(databasedir, exist_ok=True)
-    # Read the YAML file
-    yamldb = "paper_ids.yaml"
-    if os.path.exists(yamldb):
-        with open(yamldb, 'r') as file:
-            yamldata = yaml.safe_load(file)
-            if yamldata is None:
-                yamldata = {}
-    else:
-        yamldata = {}
+    def _get_size(self, file_path):
+        size = os.path.getsize(file_path)
+        power = 2**10
+        n = 0
+        power_labels = {0: '', 1: 'KB', 2: 'MB', 3: 'GB', 4: 'TB'}
+        while size > power:
+            size /= power
+            n += 1
+        return f"{size:.2f} {power_labels[n]}"
 
-    if paperFile not in yamldata:
-        yamldata[paperFile] = {
-            'pdfdatafile': "docsearch_{}.pickle".format(str(uuid.uuid4())),
-            'chaindatafile': "chain_{}.pickle".format(str(uuid.uuid4()))
-            }
-        with open(yamldb, 'w') as file:
-            yaml.dump(yamldata, file)
+    def _get_paper_cache_file(self):
+        os.makedirs(self.databasedir, exist_ok=True)
+        # Read the YAML file
+        if os.path.exists(self.yamldb):
+            with open(self.yamldb, 'r') as file:
+                yamldata = yaml.safe_load(file)
+                if yamldata is None:
+                    yamldata = {}
+        else:
+            yamldata = {}
 
-
-    pdfdatafile1 = os.path.join(databasedir, yamldata[paperFile]['pdfdatafile'])
-    chaindatafile1 = os.path.join(databasedir, yamldata[paperFile]['chaindatafile'])
-
-    if config['clear_cache']:
-        if os.path.exists(pdfdatafile1):
-            os.remove(pdfdatafile1)
-        if os.path.exists(chaindatafile1):
-            os.remove(chaindatafile1)
-        print("Cache cleared")
-
-    if not os.path.exists(pdfdatafile1):
-        # location of the pdf file/files. 
-        reader = PdfReader(paperFile)
-
-        # read data from the file and put them into a variable called raw_text
-        raw_text = ''
-        for i, page in enumerate(reader.pages):
-            text = page.extract_text()
-            if text:
-                raw_text += text
+        if self.paperFile not in yamldata:
+            yamldata[self.paperFile] = {
+                'pdfdatafile': "docsearch_{}.pickle".format(str(uuid.uuid4())),
+                'chaindatafile': "chain_{}.pickle".format(str(uuid.uuid4()))
+                }
+            with open(self.yamldb, 'w') as file:
+                yaml.dump(yamldata, file)
 
 
-        ## Split the text into chunks of 1000 characters each with 200 characters overlap between chunks 
-        ## (so that we don't miss any information) 
-        text_splitter = CharacterTextSplitter(        
-            separator = "\n",
-            chunk_size = config['chunk_size'],
-            chunk_overlap  = config['chunk_overlap'],
-            length_function = len,
-        )
-        texts = text_splitter.split_text(raw_text)
+        self.pdfdatafile1 = os.path.join(self.databasedir, yamldata[self.paperFile]['pdfdatafile'])
+        self.chaindatafile1 = os.path.join(self.databasedir, yamldata[self.paperFile]['chaindatafile'])
+
+    def _create_model(self):
+        '''
+        Create the model
+        '''
+        
+        self._get_paper_cache_file()
+        if config['clear_cache']:
+            ## Clear the cache
+            if os.path.exists(self.pdfdatafile1):
+                os.remove(self.pdfdatafile1)
+            
+            if os.path.exists(self.chaindatafile1):
+                os.remove(self.chaindatafile1)
+            print("Cache cleared")
+
+        if not os.path.exists(self.pdfdatafile1):
+            # location of the pdf file/files. 
+            reader = PdfReader(self.paperFile)
+
+            # read data from the file and put them into a variable called raw_text
+            raw_text = ''
+            for i, page in enumerate(reader.pages):
+                text = page.extract_text()
+                if text:
+                    raw_text += text
 
 
-        # Download embeddings from OpenAI API and create a vector store using FAISS 
-        ## (a library for efficient similarity search and clustering of dense vectors)
-        embeddings = OpenAIEmbeddings()
+            ## Split the text into chunks of 1000 characters each with 200 characters overlap between chunks 
+            ## (so that we don't miss any information) 
+            text_splitter = CharacterTextSplitter(        
+                separator = "\n",
+                chunk_size = config['chunk_size'],
+                chunk_overlap  = config['chunk_overlap'],
+                length_function = len,
+            )
+            texts = text_splitter.split_text(raw_text)
 
-        ## Create the vector store object using FAISS 
-        docsearch = FAISS.from_texts(texts, embeddings)
 
-        # Save the object to a pickle file
-        with open(pdfdatafile1, 'wb') as f:
-            pickle.dump(docsearch, f)
+            # Download embeddings from OpenAI API and create a vector store using FAISS 
+            ## (a library for efficient similarity search and clustering of dense vectors)
+            embeddings = OpenAIEmbeddings()
 
-        ## Print some stats
-        if config['output_stats']:
-            print("Number of chunks: {}".format(len(texts)))
-            print("Average chunk length: {:.1f}".format(sum([len(t) for t in texts])/len(texts)))
-            print("Total length of read: {} characters".format(sum([len(t) for t in texts])))
-            print("Total length of original text: {} characters".format(len(raw_text)))
-            print("Size of the cache pickle file: {} ".format(get_size(pdfdatafile1)))
-    else:
-        if config['output_stats']:
-            print("Using cached data")
+            ## Create the vector store object using FAISS 
+            self.docsearch = FAISS.from_texts(texts, embeddings)
 
-    # Load the object from the pickle file
-    with open(pdfdatafile1, 'rb') as f:
-        docsearch = pickle.load(f)
+            # Save the object to a pickle file
+            with open(self.pdfdatafile1, 'wb') as f:
+                pickle.dump(self.docsearch, f)
 
-    if not os.path.exists(chaindatafile1):
-        ## Create a question answering chain using GPT-3.5-turbo model from the langchain library 
-        ## (a library for building language chains) 
-        chain = load_qa_chain(ChatOpenAI(temperature=config['gpt_temperature'], model_name='gpt-3.5-turbo'), chain_type="stuff")
-        with open(chaindatafile1, 'wb') as f:
-            pickle.dump(chain, f)
-    else:
-        with open(chaindatafile1, 'rb') as f:
-            chain = pickle.load(f)
-    return docsearch, chain
+            ## Print some stats
+            if config['output_stats']:
+                print("Number of chunks: {}".format(len(texts)))
+                print("Average chunk length: {:.1f}".format(sum([len(t) for t in texts])/len(texts)))
+                print("Total length of read: {} characters".format(sum([len(t) for t in texts])))
+                print("Total length of original text: {} characters".format(len(raw_text)))
+                print("Size of the cache pickle file: {} ".format(self._get_size(self.pdfdatafile1)))
+        else:
+            if config['output_stats']:
+                print("Using cached data")
 
-def query_document(docsearch, chain, query):
-    '''
-    Query the document and return the answer
-    '''
-    ## Query the document 
-    docs = docsearch.similarity_search(query)
-    return chain.run(input_documents=docs, question=query)
+        # Load the object from the pickle file
+        with open(self.pdfdatafile1, 'rb') as f:
+            self.docsearch = pickle.load(f)
+
+        if not os.path.exists(self.chaindatafile1):
+            ## Create a question answering chain using GPT-3.5-turbo model from the langchain library 
+            ## (a library for building language chains) 
+            self.chain = load_qa_chain(ChatOpenAI(temperature=config['gpt_temperature'], model_name='gpt-3.5-turbo'), chain_type="stuff")
+            with open(self.chaindatafile1, 'wb') as f:
+                pickle.dump(self.chain, f)
+        else:
+            with open(self.chaindatafile1, 'rb') as f:
+                self.chain = pickle.load(f)
+
+    def update_chain_cache(self):
+        '''
+        Update the chain cache
+        '''
+        with open(self.chaindatafile1, 'wb') as f:
+            pickle.dump(self.chain, f)
+
+    def query_document(self, query):
+        '''
+        Query the document and return the answer
+        '''
+        ## Query the document 
+        docs = self.docsearch.similarity_search(query)
+        output = self.chain.run(input_documents=docs, question=query)
+        self.update_chain_cache()
+        return output
 
 if __name__ == "__main__":
     main()
