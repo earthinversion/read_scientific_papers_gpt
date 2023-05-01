@@ -66,10 +66,11 @@ def main():
 
 class PaperReader:
     def __init__(self, config):
-        self.paperFile = config['paper_path']
-        self.databasedir = "cachedata"
-        self.yamldb = "paper_ids.yaml"
-        self._create_model()
+        self.paperFile = config['paper_path'] ## path to the paper
+        self.databasedir = "cachedata" ## directory to store the cache files
+        self.yamldb = "paper_ids.yaml" ## yaml file to store the cache file names
+        self.llm = 'gpt-3.5-turbo' # large language model to use for the question answering
+        self._create_model() ## create the model
 
     def _get_size(self, file_path):
         size = os.path.getsize(file_path)
@@ -141,6 +142,8 @@ class PaperReader:
             )
             texts = text_splitter.split_text(raw_text)
 
+            # if config['document_output'] and config['improve_answers']:
+            #     texts = self._improve_output(texts)
 
             # Download embeddings from OpenAI API and create a vector store using FAISS 
             ## (a library for efficient similarity search and clustering of dense vectors)
@@ -160,9 +163,12 @@ class PaperReader:
                 print("Total length of read: {} characters".format(sum([len(t) for t in texts])))
                 print("Total length of original text: {} characters".format(len(raw_text)))
                 print("Size of the cache pickle file: {} ".format(self._get_size(self.pdfdatafile1)))
+
+
         else:
             if config['output_stats']:
                 print("Using cached data")
+
 
         # Load the object from the pickle file
         with open(self.pdfdatafile1, 'rb') as f:
@@ -171,12 +177,40 @@ class PaperReader:
         if not os.path.exists(self.chaindatafile1):
             ## Create a question answering chain using GPT-3.5-turbo model from the langchain library 
             ## (a library for building language chains) 
-            self.chain = load_qa_chain(ChatOpenAI(temperature=config['gpt_temperature'], model_name='gpt-3.5-turbo'), chain_type="stuff")
+            # self.chain = load_qa_chain(ChatOpenAI(temperature=config['gpt_temperature'], model_name='gpt-3.5-turbo'), chain_type="stuff")
+            self.chain = load_qa_chain(ChatOpenAI(temperature=config['gpt_temperature'], model_name=self.llm), chain_type="stuff")
             with open(self.chaindatafile1, 'wb') as f:
                 pickle.dump(self.chain, f)
         else:
             with open(self.chaindatafile1, 'rb') as f:
                 self.chain = pickle.load(f)
+
+    def _improve_output(self, texts):
+        '''
+        Improve the output by using the previous queries
+        '''
+        outdocfile = self.paperFile.replace(".pdf", "_output.md")
+        
+        if os.path.exists(outdocfile):
+            with open(outdocfile, 'r') as f:
+                text_doc = f.read()
+            text_doc.replace("="*100, "")
+            text_doc.replace("-"*100, "")
+            total_len = len(text_doc)
+            
+            # print('len of text doc', len(texts_doc))
+            if total_len > 1000:
+                text_splitter_imp = CharacterTextSplitter(        
+                    separator = "\n",
+                    chunk_size = 1000,
+                    chunk_overlap  = 200,
+                    length_function = len,
+                )
+                texts_doc = text_splitter_imp.split_text(text_doc)
+                texts = texts + texts_doc
+                if config['output_stats']:
+                    print("Using the previous queries to improve the answers")
+        return texts
 
     def update_chain_cache(self):
         '''

@@ -5,7 +5,7 @@ paper_path: "papers/french-and-romanowicz---2014---whole-mantle-radially-anisotr
 
 
 chunk_size: 2000 ## number of characters in each chunk
-chunk_overlap: 400 ## overlap between chunks in characters is important for the model to learn the context
+chunk_overlap: 600 ## overlap between chunks in characters is important for the model to learn the context
 
 ## Clean up the old run
 clear_cache: False ## clear the cache of the previous run
