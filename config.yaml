@@ -13,7 +13,7 @@ clear_cache: False ## clear the cache of the previous run
 output_stats: False ## output statistics of the run
 
 ## GPT3 parameters 
-gpt_temperature: 0.5 ## gpt temperature parameter (0-1)
+gpt_temperature: 0.3 ## gpt temperature parameter (0-1)
 
 ## If the document_output option is set to true, the output of the script will be written to a file. 
 document_output: True
