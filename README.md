@@ -3,7 +3,7 @@ This script reads a PDF file and answers questions about it. The script takes tw
 
 ## Description
 - `read_paper.py`: It uses the `load_qa_chain` that provides the most generic interface for answering questions. It loads a chain that you can do QA for your input documents. It uses ALL of the text in the documents.
-- `conversational.py`: This method retains the memory of the previous conversation.
+- `conversational.py`: This method retains the memory of the previous conversation. It can use the memory to improve the answer.
 
 ## Installation
 - Create a python virtual environment and install these libraries
