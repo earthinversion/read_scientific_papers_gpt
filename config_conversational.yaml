@@ -1,0 +1,4 @@
+paper_path: "/Users/utpalkumar/Documents/llm_read_papers/papers/liu-and-stegman---2011---segmentation-of-the-farallon-slab.pdf"
+
+chunk_size: 2000 ## number of characters in each chunk
+chunk_overlap: 700 ## overlap between chunks in characters is important for the model to learn the context

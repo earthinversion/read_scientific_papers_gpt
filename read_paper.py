@@ -177,7 +177,6 @@ class PaperReader:
         if not os.path.exists(self.chaindatafile1):
             ## Create a question answering chain using GPT-3.5-turbo model from the langchain library 
             ## (a library for building language chains) 
-            # self.chain = load_qa_chain(ChatOpenAI(temperature=config['gpt_temperature'], model_name='gpt-3.5-turbo'), chain_type="stuff")
             self.chain = load_qa_chain(ChatOpenAI(temperature=config['gpt_temperature'], model_name=self.llm), chain_type="stuff")
             with open(self.chaindatafile1, 'wb') as f:
                 pickle.dump(self.chain, f)
@@ -224,7 +223,8 @@ class PaperReader:
         Query the document and return the answer
         '''
         ## Query the document 
-        docs = self.docsearch.similarity_search(query)
+        instructions = " Only output the answer to the question from the article. "
+        docs = self.docsearch.similarity_search(query + instructions)
         output = self.chain.run(input_documents=docs, question=query)
         self.update_chain_cache()
         return output

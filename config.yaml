@@ -1,11 +1,15 @@
 ## This is the configuration file
 
 ## path to the reading material
-paper_path: "papers/french-and-romanowicz---2014---whole-mantle-radially-anisotropic-shear-velocity-s.pdf"
+# paper_path: "papers/french-and-romanowicz---2014---whole-mantle-radially-anisotropic-shear-velocity-s.pdf"
+# paper_path: "/Users/utpalkumar/Zotero/storage/3RQTTCWF/Lekić\ et\ al.\ -\ 2010\ -\ A\ simple\ method\ for\ improving\ crustal\ corrections\ .pdf"
+# paper_path: "/Users/utpalkumar/Documents/BarbaraWorkiCloud/barbara-reading-group-publications/swfrench-thesis-commit_a06d151-with_figures.pdf"
+paper_path: "/Users/utpalkumar/Documents/llm_read_papers/papers/liu-and-stegman---2011---segmentation-of-the-farallon-slab.pdf"
 
 
 chunk_size: 2000 ## number of characters in each chunk
-chunk_overlap: 600 ## overlap between chunks in characters is important for the model to learn the context
+chunk_overlap: 700 ## overlap between chunks in characters is important for the model to learn the context
+# chunk_overlap: 300 ## overlap between chunks in characters is important for the model to learn the context
 
 ## Clean up the old run
 clear_cache: False ## clear the cache of the previous run
