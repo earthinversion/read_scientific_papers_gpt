@@ -13,6 +13,7 @@ from langchain.chat_models import ChatOpenAI
 import os, sys
 import yaml
 import uuid
+import json
 
 import argparse
 
@@ -30,9 +31,9 @@ args = parser.parse_args()
 
 with open(args.configfile, 'r') as f:
     config = yaml.safe_load(f)
-# print(args)
+# print(config)
 
-openaikey = os.environ["OPENAI_API_KEY"]
+os.environ["OPENAI_API_KEY"] = config['gpt_API_key']
 
 
 ########################    MAIN    ##############################
@@ -49,15 +50,18 @@ def main():
     query = args.query
     out = paperreader.query_document(query)
     if config['document_output']:
-        outdoc = paperFile.replace(".pdf", "_output.md")
+        file_path_no_extension = os.path.splitext(paperFile)[0]
+        
+        outdoc = file_path_no_extension +"_output.md"
+        # print(outdoc)
         if config['clear_cache']:
             if os.path.exists(outdoc):
                 os.remove(outdoc)
         with open(outdoc, 'a') as f:
             # f.write("====================\n")
             f.write("="*100+"\n")
-            f.write("QUERY: {}\n".format(query))
-            f.write("OUTPUT: {}\n".format(out))
+            f.write("QUERY: {}\n".format(query.encode('utf-8')))
+            f.write("OUTPUT: {}\n".format(out.encode('utf-8')))
             f.write("\n")
             # f.write("-"*100+"\n")
     print("="*100)
@@ -69,7 +73,7 @@ class PaperReader:
         self.paperFile = config['paper_path'] ## path to the paper
         self.databasedir = "cachedata" ## directory to store the cache files
         self.yamldb = "paper_ids.yaml" ## yaml file to store the cache file names
-        self.llm = 'gpt-3.5-turbo' # large language model to use for the question answering
+        self.llm = config['llm'] # large language model to use for the question answering
         self._create_model() ## create the model
 
     def _get_size(self, file_path):
@@ -122,14 +126,18 @@ class PaperReader:
 
         if not os.path.exists(self.pdfdatafile1):
             # location of the pdf file/files. 
-            reader = PdfReader(self.paperFile)
-
+            if config["file_type"] == 'pdf':
+                reader = PdfReader(self.paperFile)
+            
             # read data from the file and put them into a variable called raw_text
-            raw_text = ''
-            for i, page in enumerate(reader.pages):
-                text = page.extract_text()
-                if text:
-                    raw_text += text
+                raw_text = ''
+                for i, page in enumerate(reader.pages):
+                    text = page.extract_text()
+                    if text:
+                        raw_text += text
+            elif config["file_type"] == 'json':
+                with open(self.paperFile, 'r', encoding='utf-8') as f:
+                    raw_text = str(json.load(f))
 
 
             ## Split the text into chunks of 1000 characters each with 200 characters overlap between chunks 
@@ -147,7 +155,7 @@ class PaperReader:
 
             # Download embeddings from OpenAI API and create a vector store using FAISS 
             ## (a library for efficient similarity search and clustering of dense vectors)
-            embeddings = OpenAIEmbeddings()
+            embeddings = OpenAIEmbeddings(openai_api_key="")
 
             ## Create the vector store object using FAISS 
             self.docsearch = FAISS.from_texts(texts, embeddings)

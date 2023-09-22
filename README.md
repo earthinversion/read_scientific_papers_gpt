@@ -21,6 +21,7 @@ pip install chromadb
 ```
 
 ## Run
+- Rename 'config.yaml.example' to 'config.yaml', check configurations inside
 - Export your OpenAI api in your os environment. You can go to the openai platform to get your api: https://platform.openai.com/account/api-keys
 - This script uses gpt-3.5-turbo model
 - For a list of other models: https://platform.openai.com/docs/models/overview

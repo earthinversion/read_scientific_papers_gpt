@@ -4,11 +4,14 @@
 # paper_path: "papers/french-and-romanowicz---2014---whole-mantle-radially-anisotropic-shear-velocity-s.pdf"
 # paper_path: "/Users/utpalkumar/Zotero/storage/3RQTTCWF/Lekić\ et\ al.\ -\ 2010\ -\ A\ simple\ method\ for\ improving\ crustal\ corrections\ .pdf"
 # paper_path: "/Users/utpalkumar/Documents/BarbaraWorkiCloud/barbara-reading-group-publications/swfrench-thesis-commit_a06d151-with_figures.pdf"
-paper_path: "/Users/utpalkumar/Documents/llm_read_papers/papers/liu-and-stegman---2011---segmentation-of-the-farallon-slab.pdf"
+paper_path: "./paper/table6.json"
+file_type: "json"   ## 'pdf' or 'json', json is for loading OCRed tabels from papers 
+gptAPIKey: ""
+llm: "gpt-4"  ## GPT-3.5-turbo or GPT-4 or whatever
 
 
 chunk_size: 2000 ## number of characters in each chunk
-chunk_overlap: 700 ## overlap between chunks in characters is important for the model to learn the context
+chunk_overlap: 500 ## overlap between chunks in characters is important for the model to learn the context
 # chunk_overlap: 300 ## overlap between chunks in characters is important for the model to learn the context
 
 ## Clean up the old run
@@ -17,7 +20,7 @@ clear_cache: False ## clear the cache of the previous run
 output_stats: False ## output statistics of the run
 
 ## GPT3 parameters 
-gpt_temperature: 0.3 ## gpt temperature parameter (0-1)
+gpt_temperature: 0.15 ## gpt temperature parameter (0-1)
 
 ## If the document_output option is set to true, the output of the script will be written to a file. 
 document_output: True
