@@ -4,3 +4,4 @@ papers
 *.{psd,zip,tar,gz}
 .DS_Store
 configuration.yaml
+config.yaml
