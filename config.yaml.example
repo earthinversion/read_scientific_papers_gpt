@@ -7,7 +7,7 @@
 paper_path: "./paper/table6.json"
 file_type: "json"   ## 'pdf' or 'json', json is for loading OCRed tabels from papers 
 gptAPIKey: ""
-llm: "gpt-4"  ## GPT-3.5-turbo or GPT-4 or wahtever
+llm: "gpt-4"  ## GPT-3.5-turbo or GPT-4 or whatever
 
 
 chunk_size: 2000 ## number of characters in each chunk
